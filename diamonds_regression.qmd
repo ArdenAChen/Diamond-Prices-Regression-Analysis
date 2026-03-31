@@ -1,0 +1,396 @@
+---
+title: "Diamond Prices Linear Regression Project"
+author: "Arden Chen, Alison Gu, Andrew Machon"
+format: pdf
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message =  FALSE)
+knitr::opts_chunk$set(warning =  FALSE)
+knitr::opts_chunk$set(error =  FALSE)
+```
+
+# PART - 1
+
+Data Description and Descriptive Statistics
+
+Your first objective is to understand all the variables in the Diamonds dataset from Kaggle and explore their relationships: Here’s the link. You are expected to include all available variables in your analysis, not just a subset. This means incorporating all categorical and numerical variables present in the dataset. Make sure your sample contains at least 1000 observations.
+
+```{r}
+diamondsdata <- read.csv("DiamondsPrices2022.csv")
+head(diamondsdata)
+```
+
+1.  Select a random sample. 2 points
+
+```{r}
+library(ggplot2)
+set.seed(12345)
+diamonds_sample <- diamonds[sample(nrow(diamonds), 1000), ]
+```
+
+2.  Describe all the variables (call summary function on the dataset, see the structure, create histograms for continuous random variable, comment on their distribution, bar plots for categorical random variable). 10 points
+
+```{r}
+summary(diamonds_sample)
+str(diamonds_sample)
+```
+
+```{r}
+ggplot(diamonds_sample, aes(x = cut)) +
+  geom_bar() +
+  labs(title = "Distribution of Diamond Cut",
+       x = "Cut Quality",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+The ideal cut quality has the highest frequency (\~390), followed by premium (\~275), very good (\~225), then jumping down to good (\~80), then fair (\~40).
+
+```{r}
+hist(diamonds_sample$y,
+     main = "Histogram of Diamonds Sample Width (y)",
+       xlab = "Diamonds Sample Width (mm)",
+       ylab = "Frequency")
+```
+
+The histogram of y (width) seems to appear right-skewed with similar frequency across values y=4.5 until y=7.
+
+```{r}
+hist(diamonds_sample$price,
+     main = "Histogram of Diamonds Sample Price",
+       xlab = "Diamonds Sample Price ($)",
+       ylab = "Frequency")
+```
+
+Price is heavily right-skewed.
+
+```{r}
+hist(diamonds_sample$carat,
+     main = "Histogram of Diamonds Sample Carat",
+       xlab = "Diamonds Sample Carat",
+       ylab = "Frequency")
+```
+
+Carats is heavily right-skewed.
+
+```{r}
+ggplot(diamonds_sample, aes(x = clarity)) +
+  geom_bar() +
+  labs(title = "Distribution of Diamond Clarity",
+       x = "Clarity",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+SI1 (\~240) and VS2 (\~230) have the highest frequencies, then SI2 (\~155) and VS1 (\~130), then VVS2 (\~98), VVS1 (\~75), IF (\~35), and I1 (\~20).
+
+```{r}
+hist(diamonds_sample$z,
+     main = "Histogram of Diamonds Sample z (depth in mm)",
+       xlab = "Diamonds Sample z (mm)",
+       ylab = "Frequency")
+```
+
+z (depth in mm) appears to be right-skewed
+
+```{r}
+hist(diamonds_sample$x,
+     main = "Histogram of Diamonds Sample Length (x)",
+       xlab = "Diamonds Sample Length (mm)",
+       ylab = "Frequency")
+```
+
+Length (x) has a similar distribution as width (y).
+
+```{r}
+hist(diamonds_sample$table,
+     main = "Histogram of Diamonds Sample Table",
+       xlab = "Diamonds Sample Table",
+       ylab = "Frequency")
+```
+
+The histogram for table appears relatively normally distributed with the mean at around 57
+
+```{r}
+hist(diamonds_sample$depth,
+     main = "Histogram of Diamonds Sample Depth",
+       xlab = "Diamonds Sample Depth",
+       ylab = "Frequency")
+```
+
+The depth appears to be relatively normally distributed with the mean at around 61-63
+
+```{r}
+ggplot(diamonds_sample, aes(x = color)) +
+  geom_bar() +
+  labs(title = "Distribution of Diamond Color",
+       x = "Color",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+All the colors seem to be relatively similar in frequency except for J. More specifically, the highest frequency is G (\~205), followed by E (\~190), F (\~175), H (\~165), D (\~130), I (\~96), and lastly J (\~35).
+
+3.  Determine if there is any correlation between these variables. 2 points
+
+```{r}
+require(graphics)
+pairs(diamonds_sample, main = "Diamonds Sample Correlation Matrix", gap = 1/4)
+```
+
+**There does appear to be a correlation between carat, length (x), width (y), depth (z), and price. Cut, color, clarity, depth, and table do not seem to have any correlation with either each other or any other variables.**
+
+4.  Run the multiple linear regression model using all these variables and observe the summary statistics. (DO NOT EXPLAIN HYPOTHESIS TESTING OR ANYTHING ELSE) 2 points
+
+```{r}
+model <- lm(price ~ ., data=diamonds_sample)
+summary(model)
+```
+
+5.  Comment on anything of interest that occurred in this part. Were the data approximately what you expected, or did some of the results surprise you? 2 points
+
+**The data was for the most part as expected because almost each predictor has a significant impact on the price of the diamond, which makes sense. It is strange that length was not significant in the model since it had high correlation with price as well as width and depth. It is also a little surprising how table seemed insignificant because I would expect that diamond shapes and ratios would impact the price of the diamond.**
+
+# Part - 2
+
+SIMPLE LINEAR REGRESSION
+
+PART I continuation...
+
+1\. Start with one predictor and one response from the variables in Part I. For instance, you can start with the predictor ’carat’ and the response ’price’, and conduct a simple linear regression analysis on it. 2 points
+
+```{r}
+# Predictor: x (length in mm), response: price
+simple_model <- lm(price ~ x, data = diamonds_sample)
+```
+
+2.  Run the model and examine the summary statistics, interpreting everything (hypothesis testing, R\^2adj as discussed in class, confidence interval, prediction interval, plot, etc.). 7 points
+
+```{r}
+summary(simple_model)
+
+# Getting the confidence interval of the estimate for the slope of x
+confint(simple_model)
+
+# Getting the mean confidence interval of price at x = 6
+x_0 <- data.frame(x = c(6))
+predict(simple_model, newdata = x_0, interval = "confidence")
+
+# Prediction interval of price at x = 6
+predict(simple_model, newdata = x_0, interval = "prediction")
+
+# Plotting the model
+plot(price ~ x, data = diamonds_sample, xlab = "Length (mm)", ylab = "Price (USD)", main = "Diamond Length vs. Diamond Price")
+abline(simple_model, col = 'red', lwd = 2)
+```
+
+**H0: The length of diamonds in millimeters does not have a significant effect on the price.**
+
+**H1: The length of diamonds in millimeters does have a significant effect on the price.**
+
+**Intercept:**
+
+-   **When the length of the diamond in 0mm, the estimated price is -\$14,117.34. This intercept does not make much sense in the context of the data but is significant in the model because the p-value is less than alpha=0.05.**
+
+-   **The standard error is 304.96, so the average deviation of the intercept estimate from its true population value is 304.96. This shows a great deviation around the intercept estimate.**
+
+-   **The t-value is -46.29, which means that the intercept coefficient is -46.29 standard errors from 0. This means the intercept coefficient is 46.29 standard errors to the left of 0.**
+
+**Coefficient:**
+
+-   **The point estimate for the coefficient for length (x) is 3,151.38, which means that with each increase in 1 millimeter in diamond length, the estimated price increases by \$3,151.38.**
+
+-   **Regressing diamond price based on length in millimeters, we get that the length (x) is a significant factor. Under the t-test for significance, the p-value of length (x) being insignificant is much less than alpha=0.05 which implies we should reject the null hypothesis because we have significant evidence that length of diamond (x) is a significant factor on price.**
+
+-   **The standard error is 52.36, which means that the average deviation of diamond length estimate from its true population value is 52.36. This shows that the the estimate is relatively precise.**
+
+-   **The t-value is 60.18, which means that the diamonds length is 60.18 standard errors from 0. This shows strong evidence that diamond length significant affects price.**
+
+**The R-squared score is 0.784 which means that in the model, 78.4% of the variance in prices is explained by the length of the diamond (x). This is a high R-squared score, so length is a great predictor for price. In a simple linear regression model, R-squared adjusted does not matter compared to simple R-squared since there is only one factor.**
+
+**The true estimate for the coefficient for length is likely within the 95% confidence interval (3,048.623, 3,254.13). For a given length of 6 millimeters, the 95% confidence interval for the mean value of price in dollars is (4,671.433, 4,910.404)**
+
+**Running a prediction interval on the model for a diamond with length 6 millimeters, the 95% prediction interval is (1,126.636, 8,455.2). Plotting diamond length (x) against diamond price, there does seem to be a linear relationship, though the assumption on constant variance might be violated in this current model.**
+
+3.  Test the assumptions and apply any necessary transformations to the response variable y or the predictor. 7 points
+
+```{r}
+# Show residuals vs fitted plot to test constant variance, Q-Q plot to test normality
+par(mfrow = c(1, 2))
+plot(simple_model, which = c(1, 2))
+
+# If max/min > 10 in price, we can use the log transformation
+max(diamonds_sample$price, na.rm = TRUE) / min(diamonds_sample$price, na.rm = TRUE)
+
+# Test assumption that the expected value of the error is 0
+mean(residuals(simple_model))
+```
+
+**The model appears to have a funnel shape in the residuals vs fitted plot, which appears to violate the assumption that the variance is constant. In a simple linear regression model, the residuals vs fitted plot serves the same purpose as the residuals vs predictor plot. The Q-Q plot has most points close to the normal line but with some big tails, so the distribution may not be normal but can be transformed into one. We can fix this by applying a log transformation to the price. It does appear that the mean of the residuals is close to 0 so that assumption is not violated.**
+
+```{r}
+# Perform a log transformation on the model
+log_model <- lm(log(price) ~ x, data = diamonds_sample)
+plot(log_model, which = c(1, 2))
+```
+
+4.  Call the summary function on the transformed variables, observe the summary, and note any changes. 2 points
+
+```{r}
+summary(log_model)
+```
+
+**The estimates and standard error are significantly smaller mainly due to the log transformation. The t-values are very different in the log model but the significance test still points towards the length (x) being a significant predictor of price. This model seems to follow the the assumptions of a linear model. The residuals vs fitted plot shows no discernible pattern between residuals and fitted values with mean 0 which indicates the variance is constant. The Q-Q plot has the points following a much straighter line than the other model which suggests this model does not violate the assumption on normality of the error. The log transformation does not change the expectation of the error, so that assumption is still satisfied.**
+
+5.  Add other variables to the model and assess if the model improves. For step 5, run the code in the background and include all interpretations in the file. For instance, if adding depth to the simple linear regression model (carat and price) increases the adjusted R\^2, include it in the model; if it decreases, exclude it. Do not include the code for step 5 in the submitted file; only write the conclusions. 6 points
+
+```{r, include = FALSE}
+one_factor <- lm(log(price) ~ x, data = diamonds_sample)
+two <- lm(log(price) ~ x + carat, data = diamonds_sample)
+three <- lm(log(price) ~ x + cut, data = diamonds_sample)
+four <- lm(log(price) ~ x + color, data = diamonds_sample)
+five <- lm(log(price) ~ x + clarity, data = diamonds_sample)
+six <- lm(log(price) ~ x + y, data = diamonds_sample)
+seven <- lm(log(price) ~ x + z, data = diamonds_sample)
+eight <- lm(log(price) ~ x + depth, data = diamonds_sample)
+nine <- lm(log(price) ~ x + table, data = diamonds_sample)
+
+summary(one_factor)
+summary(two)
+summary(three)
+summary(four)
+summary(five)
+summary(six)
+summary(seven)
+summary(eight)
+summary(nine)
+```
+
+**For the simple linear regression model with length as the predictor with the log transformation, we get an R-squared score of 0.9243. We will test adding one predictor for every remaining predictor to create a multiple linear regression model with two predictors. Adding carat to the simple linear regression model we get an increased adjusted R-squared score of 0.9319. Adding cut to the simple linear regression model we get a slightly increased adjusted R-squared score of 0.9269. If we instead add color, the adjusted R-squared score goes up to 0.9354. If we add clarity, the adjusted R-squared score goes up to 0.954. If we add y, the adjusted R-squared score increases to 0.9263. If we add z, the adjusted R-squared score increases ever so slightly to 0.9249. If we add depth, the adjusted R-squared score increases slightly to 0.9246. If we add table, the adjusted R-squared score increases to 0.9254. The predictor that adds most to the adjusted R-squared score to the simple linear regression model is clarity.**
+
+6.  Comment on anything of interest that occurred while doing this part. 2 points
+
+**Adding any of the other predictors to our log simple linear regression model increased the adjusted R-squared score. It is also interesting that clarity was the predictor that added the most to adjusted R-squared when paired with length.**
+
+# Part -3
+
+PART II continuation...
+
+1\. In class we saw different techniques and criterion to find best model. You can use any method and technique you prefer (e.g., backward elimination using AIC or stepwise regression using AIC or backward elimination using BIC criterion) to find the best model and document your observations. 10 points
+
+The number of observations is not too large so we can do stepwise regression using AIC
+
+```{r}
+full_model <- lm(log(price) ~ ., data = diamonds_sample)
+null_model <- lm(log(price) ~ 1, data = diamonds_sample)
+AIC_model <- step(null_model,
+                  direction = "both",
+                  scope = formula(full_model))
+```
+
+**Running the AIC method, it seems that no variable in the model after the log transformation is irrelevant. The model with the lowest AIC from the full model is:** `log(price) ~ y + clarity + color + carat + z + cut + x + table + depth`
+
+```{r}
+summary(AIC_model)
+```
+
+2.  Detect multicollinearity among the variables using the variance inflation factor (VIF). 4 points
+
+```{r}
+library(car)
+
+vif(AIC_model)
+```
+
+**Because our VIF is greater than 5 or 10 for multiple variables, this shows that the associated regression coefficients are poorly estimated due to multicollinearity. Therefore, we should try removing each of them from the model to see their effects. We'll try removing x, y, and z independently to see which leaves us with the least VIF:**
+
+```{r}
+remove_z_model <- 
+  lm(log(price) ~ 
+       y + clarity + color + carat + 
+       cut + x + table + depth,
+     data = diamonds_sample)
+
+print("Removing z:")
+vif(remove_z_model)
+
+remove_y_model <- 
+  lm(log(price) ~ 
+       z + clarity + color + carat + 
+       cut + x + table + depth,
+     data = diamonds_sample)
+
+print("Removing y:")
+vif(remove_y_model)
+
+remove_x_model <- 
+  lm(log(price) ~ 
+       y + clarity + color + carat + 
+       cut + x + table + depth,
+     data = diamonds_sample)
+
+print("Removing x:")
+vif(remove_z_model)
+```
+
+**Removing x and z leaves us with similar VIFs so let's remove both and see where how our VIFs change:**
+
+```{r}
+remove_xz_model <- 
+  lm(log(price) ~ 
+       y + clarity + color + carat + 
+       cut + table + depth,
+     data = diamonds_sample)
+
+print("Removing x & z:")
+vif(remove_xz_model)
+```
+
+**We still have two variables with \> 5 VIF, let's now remove y since carat has a much smaller p-value in the hypothesis testing for the AIC model:**
+
+```{r}
+remove_xyz_model <- 
+  lm(log(price) ~ 
+       clarity + color + carat + 
+       cut + table + depth,
+     data = diamonds_sample)
+
+print("Removing x, y, & z")
+vif(remove_xyz_model)
+```
+
+**After some removal, it seems that x, y, and z are all strongly correlated to each other and relatively correlated to carat meaning the associated regression coefficients would be poorly estimated due to multicollinearity if we kept them. Since removing them causes the VIFs of all remaining variables to be approximately equal to 1, we know that they have no correlation between each other and that no multicollinearity remains present.**
+
+3.  Give CIs for a mean predicted value and the PIs of a future predicted value for at least one combination of X’s (from your final linear model). 4 points
+
+```{r}
+# Random combination of X's from final model
+x_i <- data.frame(
+  clarity = "SI1",
+  color = "F",
+  carat = 0.67,
+  cut = "Good",
+  table = 60.0,
+  depth = 63.5
+)
+```
+
+```{r}
+# Confidence Interval:
+predict(remove_xyz_model, 
+        newdata = x_i,
+        interval = "confidence")
+```
+
+```{r}
+# Prediction Interval:
+predict(remove_xyz_model, 
+        newdata = x_i,
+        interval = "prediction")
+```
+
+4.  Summarize your report (for the final deliverable). 4 points
+
+**The best model we found was one that that regressed the logarithm of diamond price on the variables clarity, color, carat, cut, table, and depth. We arrived at this model first by analyzing a simple linear regression model regressing diamond price on length and finding that variance was non-constant. Since the maximum price divided by the minimum price was greater than 10, we were able to remedy this by simply using log(price) as the response variable instead. Thus, we could then begin using the stepwise AIC method to select which independent variables were most important to the model in order to avoid overfitting. However, we found that the AIC method was unable to eliminate any variables so we moved on to eliminating variables via VIF to prevent multicollinearity. Through this method we eliminated the variables corresponding to diamond size (x, y, z), which left us with our final deliverable. The formula for the best model is: \`log(price) \~ clarity + color + carat + cut + table + depth\`.**
